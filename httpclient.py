@@ -73,15 +73,16 @@ class HTTPClient(object):
     def GET(self, url, args=None):
         p = self.parse_url(url)
         s = self.connect(p.hostname, p.port)
-        r = "GET "+ (p.path if p.path != "" else "/") + " HTTP/1.0\r\nHost: " 
-        r += (p.hostname if p.port is None else (p.hostname + ":" + str(p.port))) +"\r\n\r\n"
+        r = "GET "+ (p.path if p.path != "" else "/") + (("?" + p.query) if p.query != "" else "") 
+        r += " HTTP/1.0\r\nHost: " 
+        r +=  p.hostname +"\r\n\r\n"
         
         try:
             s.sendall(r)
             d = self.recvall(s)
         finally:
             s.close()
-        
+
         code = self.get_code(d)
         body = self.get_body(d)
         print body
@@ -111,7 +112,7 @@ class HTTPClient(object):
             return self.POST( url, args )
         else:
             return self.GET( url, args )
-    
+
 if __name__ == "__main__":
     client = HTTPClient()
     command = "GET"
