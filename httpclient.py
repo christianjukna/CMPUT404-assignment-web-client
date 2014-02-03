@@ -44,19 +44,19 @@ class HTTPClient(object):
     # def get_headers(self,data):
     #     return None
 
+    # Connect given a host and a port, if no port use 80: default for requests (not https)
     def connect(self, host, port):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((host, 80 if port == None else port))
         return s
 
+    # Get the HTTP code, which is the second string once split, cast as int
     def get_code(self, data):
-        return (int)((((data.split("\n"))[0]).split(" "))[1])
+        return (int)((data.split(" "))[1])
 
+    # Split the data a maximum of 1 time at the header and content return & newline separators
     def get_body(self, data):
         return (data.split("\r\n\r\n",1))[1]
-
-    def parse_url(self,url):
-        return urlparse(url)
 
     # read everything from the socket
     def recvall(self, sock):
@@ -71,11 +71,10 @@ class HTTPClient(object):
         return str(buffer)
 
     def GET(self, url, args=None):
-        p = self.parse_url(url)
+        p = urlparse(url)
         s = self.connect(p.hostname, p.port)
         r = "GET "+ (p.path if p.path != "" else "/") + (("?" + p.query) if p.query != "" else "") 
-        r += " HTTP/1.0\r\nHost: " 
-        r +=  p.hostname +"\r\n\r\n"
+        r += " HTTP/1.0\r\nHost: " + p.hostname +"\r\n\r\n"
         
         try:
             s.sendall(r)
@@ -89,12 +88,12 @@ class HTTPClient(object):
         return HTTPRequest(code, body)
 
     def POST(self, url, args=None):
-        p = self.parse_url(url)
+        p = urlparse(url)
         s = self.connect(p.hostname, p.port)
         r = "POST "+ (p.path if p.path != "" else "/") + " HTTP/1.0\r\nHost: "
-        r += (p.hostname if p.port is None else (p.hostname + ":" + str(p.port))) +"\r\n"
+        r += p.hostname + "\r\n"
         r += "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: "
-        r += (str(len(urlencode(args))) +"\r\n\r\n" + urlencode(args)) if args != None else ("0\r\n\r\n")
+        r += (str(len(urlencode(args))) +(("\r\n\r\n" + urlencode(args))) if args != None else ("0\r\n\r\n"))
         
         try:
             s.sendall(r)
